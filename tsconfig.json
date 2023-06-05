@@ -1,38 +1,17 @@
 {
-	"compilerOptions": {
-		"target": "es5",
-		"module": "commonjs",
-		"moduleResolution": "node",
-		"lib": [
-			"es2015"
-		],
-
-		"rootDir": "src",
-		"outDir": "lib",
-
-		"strict": true,
-		"alwaysStrict": true,
-		"strictFunctionTypes": true,
-		"strictNullChecks": true,
-		"strictPropertyInitialization": true,
-
-		"forceConsistentCasingInFileNames": true,
-		"noImplicitAny": true,
-		"noImplicitReturns": true,
-		"noImplicitThis": true,
-		"noFallthroughCasesInSwitch": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-
-		"emitDecoratorMetadata": true,
-		"experimentalDecorators": true,
-		"downlevelIteration": true,
-		"declaration": true,
-
-		"pretty": true
-	},
-	"include": [
-		"typings/**/*",
-		"src/**/*"
-	]
-}
+    "compilerOptions": {
+      "target": "ES2017",
+      "module": "commonjs",
+      "declaration": true,
+      "outDir": "dist",
+      "strict": true,
+      "esModuleInterop": true,
+	  "lib": [
+        "ES2019"
+      ]
+    },
+    "exclude": [
+      "node_modules",
+      "dist"
+    ]
+  }

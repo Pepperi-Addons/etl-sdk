@@ -1,0 +1,95 @@
+import { BuildOperations } from "./entities";
+
+export class BuildService<T,K,L>
+{
+	private readonly pageSize = 500;
+
+	constructor(
+		private tableName: string,
+		private buildOperations: BuildOperations<T,K,L>
+	) {}
+	
+	// body is sent by refernce, so we can update "fromPage" parameter
+	public async buildTable(body: any): Promise<any>
+	{
+    	const res: any = { success: true };
+    	try
+    	{
+    		let pageOfObjects: T[];
+    		do
+    		{
+    			if (!body.fromPage)
+				{
+					body.fromPage = 1;
+				}
+
+    			pageOfObjects = await this.buildOperations.getObjectsByPage(body.fromPage, this.pageSize);
+    			console.log(`FINISHED GETTING OBJECTS. RESULTS LENGTH: ${pageOfObjects.length}`);
+
+				// fix results
+    			const fixedObjects = this.buildOperations.fixObjects(pageOfObjects);
+    			console.log(`FINISHED FIXING OBJECTS. RESULTS LENGTH: ${fixedObjects.length}`);
+
+				
+				await this.upsertByChunks(fixedObjects);
+
+    			body.fromPage++;
+    			console.log(`${this.tableName} PAGE UPSERT FINISHED.`);
+
+    		} while (pageOfObjects.length == this.pageSize);
+    	}
+    	catch (error)
+    	{
+    		res.success = false;
+    		res['errorMessage'] = error;
+    	}
+    	return res;
+	}
+
+	/**
+	 * Uses batch upsert to upload the objects to given table.
+	 * @param fixedObjects the objects to upload to given table
+	 */
+	protected async upsertByChunks(fixedObjects: any[])
+	{
+		// Since the fixedObjects array might be larger than the maximum of 500,
+		// first split the fixedObjects into array of maximal size
+		const fixedObjectsChunks = this.splitArrayIntoChunks(fixedObjects, this.pageSize);
+
+		// Batch upsert
+		for (const fixedObjectsChunk of fixedObjectsChunks)
+		{
+			await this.buildOperations.batchUpsert(this.tableName, fixedObjectsChunk);
+			console.log(`CHUNK UPSERTED TO ${this.tableName} TABLE`);
+		}
+	}
+
+	/**
+	 * Splits an array of objects into smaller arrays of a maximum size.
+	 * @param arr The array of objects to split.
+	 * @param maxSize The maximum size of each resulting array.
+	 * @returns An array of arrays of objects, where each inner array has a maximum size of maxSize.
+	 */
+	protected splitArrayIntoChunks(arr: any[], maxSize: number): any[][]
+	{
+		const chunks: any[][] = [];
+		let currentChunk: any[] = [];
+
+		for (const item of arr)
+		{
+			currentChunk.push(item);
+			if (currentChunk.length === maxSize)
+			{
+				chunks.push(currentChunk);
+				currentChunk = [];
+			}
+		}
+
+		if (currentChunk.length > 0)
+		{
+			chunks.push(currentChunk);
+		}
+
+		return chunks;
+	}
+}
