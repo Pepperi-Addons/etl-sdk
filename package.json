@@ -29,7 +29,8 @@
     "dist/**"
   ],
   "devDependencies": {
-    "@types/node": "^14.0.6",
+    "@types/node": "^14.18.51",
+	"@types/node-fetch": "^2.6.4",
     "typescript": "^5.0.4"
   }
 }
