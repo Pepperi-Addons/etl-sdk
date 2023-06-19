@@ -1,6 +1,7 @@
-import { BuildOperations } from "./entities";
+import { BuildOperations } from "../entities";
+import { BuildBody } from "../entities/build-body";
 
-export class BuildService<T,K,L>
+export abstract class BuildService<T,K,L>
 {
 	private readonly pageSize = 500;
 
@@ -8,9 +9,12 @@ export class BuildService<T,K,L>
 		private tableName: string,
 		private buildOperations: BuildOperations<T,K,L>
 	) {}
-	
-	// body is sent by refernce, so we can update "fromPage" parameter
-	public async buildTable(body: any): Promise<any>
+
+	abstract initializePagePointer(body: BuildBody): void;
+	abstract setNextPagePointer(body: BuildBody, nextValue?: string): void;
+
+	// body is sent by refernce, so we can update "currentPage" parameter
+	public async buildTable(body: BuildBody): Promise<any>
 	{
     	const res: any = { success: true };
     	try
@@ -18,25 +22,22 @@ export class BuildService<T,K,L>
     		let pageOfObjects: T[];
     		do
     		{
-    			if (!body.fromPage)
-				{
-					body.fromPage = 1;
-				}
+    			this.initializePagePointer(body);
 
-    			pageOfObjects = await this.buildOperations.getObjectsByPage(body.fromPage, this.pageSize);
+    			const searchResult = await this.buildOperations.searchObjectsByPage(body.currentPage, this.pageSize);
+				pageOfObjects = searchResult.Objects;
     			console.log(`FINISHED GETTING OBJECTS. RESULTS LENGTH: ${pageOfObjects.length}`);
 
 				// fix results
     			const fixedObjects = this.buildOperations.fixObjects(pageOfObjects);
     			console.log(`FINISHED FIXING OBJECTS. RESULTS LENGTH: ${fixedObjects.length}`);
-
 				
 				await this.upsertByChunks(fixedObjects);
 
-    			body.fromPage++;
+    			this.setNextPagePointer(body, searchResult.NextPageKey) // update currentPage parameter
     			console.log(`${this.tableName} PAGE UPSERT FINISHED.`);
 
-    		} while (pageOfObjects.length == this.pageSize);
+    		} while (pageOfObjects.length == this.pageSize && body.currentPage);
     	}
     	catch (error)
     	{
