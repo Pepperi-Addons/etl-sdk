@@ -20,10 +20,9 @@ export abstract class BuildService<T,K,L>
     	try
     	{
     		let pageOfObjects: T[];
+			this.initializePagePointer(body);
     		do
     		{
-    			this.initializePagePointer(body);
-
     			const searchResult = await this.buildOperations.searchObjectsByPage(body.currentPage, this.pageSize);
 				pageOfObjects = searchResult.Objects;
     			console.log(`FINISHED GETTING OBJECTS. RESULTS LENGTH: ${pageOfObjects.length}`);
