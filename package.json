@@ -1,12 +1,12 @@
 {
   "name": "@pepperi-addons/modelsdk",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Package for the model team",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "build": " rm -R ./dist/ && tsc",
     "lint": "tslint -c tslint.json src/**/*.ts",
     "prepublish": "npm run build"
   },
