@@ -15,4 +15,8 @@ export class PageKeyBuilder<T,K,L> extends BuildService<T,K,L> {
 	setNextPagePointer(body: BuildBody, nextValue?: string): void {
 		body.currentPage = nextValue ?? "";
 	}
+
+	nextPageExists(resultPageSize: number, currentPage: number | string): boolean {
+		return Boolean(currentPage);
+	}
 }
