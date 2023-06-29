@@ -3,7 +3,7 @@ import { BuildBody } from "../entities/build-body";
 
 export abstract class BuildService<T,K,L>
 {
-	private readonly pageSize = 500;
+	protected readonly pageSize = 500;
 
 	constructor(
 		private tableName: string,
@@ -12,6 +12,7 @@ export abstract class BuildService<T,K,L>
 
 	abstract initializePagePointer(body: BuildBody): void;
 	abstract setNextPagePointer(body: BuildBody, nextValue?: string): void;
+	abstract nextPageExists(resultPageSize: number, currentPage: number | string): boolean;
 
 	// body is sent by refernce, so we can update "currentPage" parameter
 	public async buildTable(body: BuildBody): Promise<any>
@@ -36,7 +37,7 @@ export abstract class BuildService<T,K,L>
     			this.setNextPagePointer(body, searchResult.NextPageKey) // update currentPage parameter
     			console.log(`${this.tableName} PAGE UPSERT FINISHED.`);
 
-    		} while (pageOfObjects.length == this.pageSize && body.currentPage);
+    		} while (this.nextPageExists(pageOfObjects.length, body.currentPage));
     	}
     	catch (error)
     	{

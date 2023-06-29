@@ -15,4 +15,8 @@ export class PageNumberBuilder<T,K,L> extends BuildService<T,K,L> {
 	setNextPagePointer(body: BuildBody, nextValue?: string): void {
 		body.currentPage = (body.currentPage as number) + 1;
 	}
+
+	nextPageExists(resultPageSize: number, currentPage: number | string): boolean {
+		return resultPageSize == this.pageSize;
+	}
 }
