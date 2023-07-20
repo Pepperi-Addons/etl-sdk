@@ -42,7 +42,7 @@ export abstract class BuildService<T,K,L>
     	catch (error)
     	{
     		res.success = false;
-    		res['errorMessage'] = error;
+    		res['errorMessage'] = error instanceof Error ? error.message : 'An unknown error occurred';
     	}
     	return res;
 	}
