@@ -12,16 +12,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Pepperi-Addons/ModelSDK.git"
+    "url": "git+https://github.com/Pepperi-Addons/etl-sdk.git"
   },
   "author": {
     "name": "Shir Ohana Marciano"
   },
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Pepperi-Addons/ModelSDK/issues"
+    "url": "https://github.com/Pepperi-Addons/etl-sdk/issues"
   },
-  "homepage": "https://github.com/Pepperi-Addons/ModelSDK#readme",
+  "homepage": "https://github.com/Pepperi-Addons/etl-sdk#readme",
   "dependencies": {
     "@pepperi-addons/papi-sdk": "^1.50.0"
   },
