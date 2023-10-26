@@ -10,7 +10,10 @@ export class PageNumberBuilder<T,K,L> extends BuildService<T,K,L> {
 	}
 
 	initializePagePointer(body: BuildBody): void {
-		body.currentPage = 1;
+		if(!body.currentPage)
+		{
+			body.currentPage = 1;
+		}
 	}
 	setNextPagePointer(body: BuildBody, nextValue?: string): void {
 		body.currentPage = (body.currentPage as number) + 1;

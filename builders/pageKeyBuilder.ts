@@ -10,7 +10,10 @@ export class PageKeyBuilder<T,K,L> extends BuildService<T,K,L> {
 	}
 
 	initializePagePointer(body: BuildBody): void {
-		body.currentPage = "";
+		if(!body.currentPage)
+		{
+			body.currentPage = "";
+		}
 	}
 
 	setNextPagePointer(body: BuildBody, nextValue?: string): void {
