@@ -1,3 +1,4 @@
+import { performance } from "perf_hooks";
 import { BuildOperations } from "../entities";
 import { BuildBody } from "../entities/build-body";
 
@@ -20,6 +21,7 @@ export abstract class BuildService<T,K,L>
     	const res: any = { success: true };
     	try
     	{
+			const startTime = performance.now();
     		let pageOfObjects: T[];
 			this.initializePagePointer(body);
     		do
@@ -36,6 +38,11 @@ export abstract class BuildService<T,K,L>
 
     			this.setNextPagePointer(body, searchResult.NextPageKey) // update currentPage parameter
     			console.log(`${this.tableName} PAGE UPSERT FINISHED.`);
+
+				if (this.timeIsUp(startTime))
+				{
+					throw new Error('Time is up');
+				}
 
     		} while (this.nextPageExists(pageOfObjects.length, body.currentPage));
     	}
@@ -93,4 +100,11 @@ export abstract class BuildService<T,K,L>
 
 		return chunks;
 	}
+
+	// calculates if more than 9 minutes passed
+	timeIsUp(startTime: number) {
+		const minInMS = 60 * 1000;
+		const tenMinInMS = minInMS * 10;
+		return (tenMinInMS - (performance.now() - startTime)) <= minInMS;
+	  }
 }
