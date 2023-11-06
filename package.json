@@ -1,6 +1,6 @@
 {
   "name": "@pepperi-addons/etl-sdk",
-  "version": "0.0.13",
+  "version": "0.0.15",
   "description": "Extract, Transform and Load logic for Pepperi Addons",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

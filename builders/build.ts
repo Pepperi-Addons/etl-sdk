@@ -18,12 +18,21 @@ export abstract class BuildService<T,K,L>
 	// body is sent by refernce, so we can update "currentPage" parameter
 	public async buildTable(body: BuildBody): Promise<any>
 	{
-    	const res: any = { success: true };
+    	const res: any = { success: true, timeoutReached: false };
     	try
     	{
-			const startTime = performance.now();
     		let pageOfObjects: T[];
 			this.initializePagePointer(body);
+
+			// set timeout for 9 minutes
+			const minInMS = 60 * 1000;
+			const maxWaitingForBuildLoop =  minInMS * 9;
+			let timer: NodeJS.Timeout = setTimeout(() => {
+					res.timeoutReached = true;
+					console.log(`Building table passed ${maxWaitingForBuildLoop / (1000*60) } minutes`)
+				}, maxWaitingForBuildLoop);
+
+			// stop the loop in case of timeout 
     		do
     		{
     			const searchResult = await this.buildOperations.searchObjectsByPage(body.currentPage, this.pageSize);
@@ -39,12 +48,9 @@ export abstract class BuildService<T,K,L>
     			this.setNextPagePointer(body, searchResult.NextPageKey) // update currentPage parameter
     			console.log(`${this.tableName} PAGE UPSERT FINISHED.`);
 
-				if (this.timeIsUp(startTime))
-				{
-					throw new Error('Time is up');
-				}
+    		} while (res.timeoutReached == false && this.nextPageExists(pageOfObjects.length, body.currentPage));
 
-    		} while (this.nextPageExists(pageOfObjects.length, body.currentPage));
+			clearTimeout(timer);
     	}
     	catch (error)
     	{
@@ -100,11 +106,4 @@ export abstract class BuildService<T,K,L>
 
 		return chunks;
 	}
-
-	// calculates if more than 9 minutes passed
-	timeIsUp(startTime: number) {
-		const minInMS = 60 * 1000;
-		const tenMinInMS = minInMS * 10;
-		return (tenMinInMS - (performance.now() - startTime)) <= minInMS;
-	  }
 }
