@@ -1,6 +1,6 @@
 import { performance } from "perf_hooks";
 import { BuildOperations } from "../entities";
-import { BuildBody } from "../entities/build-body";
+import { BuildBody, BuildRequest } from "../entities/build-body";
 
 export abstract class BuildService<T,K,L>
 {
@@ -15,27 +15,21 @@ export abstract class BuildService<T,K,L>
 	abstract setNextPagePointer(body: BuildBody, nextValue?: string): void;
 	abstract nextPageExists(resultPageSize: number, currentPage: number | string): boolean;
 
-	// body is sent by refernce, so we can update "currentPage" parameter
-	public async buildTable(body: BuildBody): Promise<any>
+	// request is sent by refernce, so we can update "currentPage" parameter
+	public async buildTable(request: BuildRequest): Promise<any>
 	{
     	const res: any = { success: true, timeoutReached: false };
+		request.body = request.body ?? {}; // in case no request.body sent
     	try
     	{
+			const startTime = performance.now();
     		let pageOfObjects: T[];
-			this.initializePagePointer(body);
+			this.initializePagePointer(request.body);
+			console.log(`CURRENT PAGE AFTER INITIALIZE: ${request.body.currentPage}`);
 
-			// set timeout for 9 minutes
-			const minInMS = 60 * 1000;
-			const maxWaitingForBuildLoop =  minInMS * 9;
-			let timer: NodeJS.Timeout = setTimeout(() => {
-					res.timeoutReached = true;
-					console.log(`Building table passed ${maxWaitingForBuildLoop / (1000*60) } minutes`)
-				}, maxWaitingForBuildLoop);
-
-			// stop the loop in case of timeout 
     		do
     		{
-    			const searchResult = await this.buildOperations.searchObjectsByPage(body.currentPage, this.pageSize);
+    			const searchResult = await this.buildOperations.searchObjectsByPage(request.body.currentPage, this.pageSize);
 				pageOfObjects = searchResult.Objects;
     			console.log(`FINISHED GETTING OBJECTS. RESULTS LENGTH: ${pageOfObjects.length}`);
 
@@ -45,12 +39,18 @@ export abstract class BuildService<T,K,L>
 				
 				await this.upsertByChunks(fixedObjects);
 
-    			this.setNextPagePointer(body, searchResult.NextPageKey) // update currentPage parameter
+    			this.setNextPagePointer(request.body, searchResult.NextPageKey) // update currentPage parameter
     			console.log(`${this.tableName} PAGE UPSERT FINISHED.`);
 
-    		} while (res.timeoutReached == false && this.nextPageExists(pageOfObjects.length, body.currentPage));
+				if (this.timeIsUp(startTime))
+				{
+					res.timeoutReached = true;
+					res.success = false;
+					console.log(`BUILDTABLE TIMEOUT. CURRENT PAGE: ${request.body.currentPage}`);
+				}
 
-			clearTimeout(timer);
+    		} while (res.timeoutReached == false && this.nextPageExists(pageOfObjects.length, request.body.currentPage));
+
     	}
     	catch (error)
     	{
@@ -106,4 +106,11 @@ export abstract class BuildService<T,K,L>
 
 		return chunks;
 	}
+
+	// calculates if more than 9 minutes passed
+	timeIsUp(startTime: number) {
+		const minInMS = 60 * 1000;
+		const tenMinInMS = minInMS * 10;
+		return (tenMinInMS - (performance.now() - startTime)) <= minInMS;
+	  }
 }
